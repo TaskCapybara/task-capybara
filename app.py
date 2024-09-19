@@ -50,9 +50,12 @@ current_prompt = initial_prompt
 st.title('TaskCapybara Chatbot')
 
 # Initialize session states
+if "is_logged_in" not in st.session_state:
+    st.session_state.is_logged_in = False
+    st.session_state.username = None
 if "end_chat" not in st.session_state:
     st.session_state.end_chat = False
-if "chat_history" not in st.session_state:
+if st.session_state.is_logged_in and "chat_history" not in st.session_state:
     st.session_state.chat_history = []
     with st.chat_message("assistant"):
         with st.spinner("Thinking..."):
@@ -60,33 +63,42 @@ if "chat_history" not in st.session_state:
             model_response = model.generate_text(prompt=f"{current_prompt}{formatted_user_input}")
     st.session_state.chat_history.append({"role": "assistant", "content": model_response})
 
-# Render chat history
-current_prompt = initial_prompt
-for message in st.session_state.chat_history:
-    with st.chat_message(message["role"]):
-        st.write(message["content"])
-        if message["role"] == "assistant":
-            current_prompt += f"<|start_header_id|>{message["role"]}<|end_header_id|>{message["content"]}"
-        else:
-            current_prompt += f"<|eot_id|><|start_header_id|>{message["role"]}<|end_header_id|>{message["content"]}<|eot_id|>"
-
-if not st.session_state.end_chat:
-    user_input = st.chat_input()
-    if user_input:
-        with st.chat_message("user"):
-            st.write(user_input)
-        st.session_state.chat_history.append({"role": "user", "content": user_input})
-        
-        formatted_user_input = f"<|begin_of_text|><|eot_id|><|start_header_id|>user<|end_header_id|>{user_input}<|eot_id|><|start_header_id|>assistant<|end_header_id|>"
-        with st.chat_message("assistant"):
-            with st.spinner("Thinking..."):
-                model_response = model.generate_text(prompt=f"{current_prompt}{formatted_user_input}")
-                if model_response.endswith("<EndChat>"):
-                    st.session_state.end_chat = True
-                    model_response = model_response[:-9]
-            if model_response != "":
-                st.write(model_response)
-        if model_response != "":
-            st.session_state.chat_history.append({"role": "assistant", "content": model_response})
+if not st.session_state.is_logged_in:
+    st.title("Login")
+    username = st.text_input("Enter your username:")
+    if st.button("Login"):
+        st.session_state.is_logged_in = True
+        st.session_state.username = username
+        st.rerun()
 else:
-    st.markdown("Chat ended.")    
+    st.subheader(f"Welcome back {st.session_state.username}")
+    # Render chat history
+    current_prompt = initial_prompt
+    for message in st.session_state.chat_history:
+        with st.chat_message(message["role"]):
+            st.write(message["content"])
+            if message["role"] == "assistant":
+                current_prompt += f"<|start_header_id|>{message["role"]}<|end_header_id|>{message["content"]}"
+            else:
+                current_prompt += f"<|eot_id|><|start_header_id|>{message["role"]}<|end_header_id|>{message["content"]}<|eot_id|>"
+
+    if not st.session_state.end_chat:
+        user_input = st.chat_input()
+        if user_input:
+            with st.chat_message("user"):
+                st.write(user_input)
+            st.session_state.chat_history.append({"role": "user", "content": user_input})
+            
+            formatted_user_input = f"<|begin_of_text|><|eot_id|><|start_header_id|>user<|end_header_id|>{user_input}<|eot_id|><|start_header_id|>assistant<|end_header_id|>"
+            with st.chat_message("assistant"):
+                with st.spinner("Thinking..."):
+                    model_response = model.generate_text(prompt=f"{current_prompt}{formatted_user_input}")
+                    if model_response.endswith("<EndChat>"):
+                        st.session_state.end_chat = True
+                        model_response = model_response[:-9]
+                if model_response != "":
+                    st.write(model_response)
+            if model_response != "":
+                st.session_state.chat_history.append({"role": "assistant", "content": model_response})
+    else:
+        st.markdown("Chat ended.")    
