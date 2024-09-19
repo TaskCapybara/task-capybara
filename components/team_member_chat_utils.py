@@ -1,3 +1,7 @@
+import faiss
+import numpy as np
+from sentence_transformers import SentenceTransformer
+
 class Prompt:
     def __init__(self) -> None:
         self.prompt = """<|start_header_id|>system<|end_header_id|>
@@ -31,3 +35,26 @@ class Prompt:
         if has_end_chat_tag:
             assistant_response = assistant_response[:-9]
         return has_end_chat_tag, assistant_response
+    
+
+class FaissEmbedder:
+    DIMENSION = 384
+    def __init__(self) -> None:
+        self.index = faiss.IndexFlatL2(FaissEmbedder.DIMENSION)
+        self.embedder = SentenceTransformer('all-MiniLM-L6-v2')
+        self.chat_history = []
+
+    def embed_chat_history(self, chat_history):
+        self.chat_history = chat_history
+        embeddings = self.embedder.encode(self.chat_history)
+        embeddings = np.array(embeddings).astype(np.float32)
+        self.index.add(embeddings)
+    
+    def search(self, query, k=3):
+        query_embedding = self.embedder.encode([query]).astype(np.float32)
+        distances, indices = self.index.search(query_embedding, k)
+        results = []
+        for idx in indices[0]:
+            if idx < len(self.chat_history):
+                results.append(self.chat_history[idx])
+        return results

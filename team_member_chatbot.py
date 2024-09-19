@@ -2,7 +2,7 @@ import streamlit as st
 from ibm_watsonx_ai.foundation_models.utils.enums import ModelTypes
 
 from components.model import AppModel
-from components.team_member_chat_utils import Prompt
+from components.team_member_chat_utils import Prompt, FaissEmbedder
 
 # Initialize model and prompt
 model_id = ModelTypes.LLAMA_3_70B_INSTRUCT
@@ -29,7 +29,7 @@ if st.session_state.is_logged_in and "chat_history" not in st.session_state:
         with st.spinner("Thinking..."):
             prompt = Prompt()
             assistant_response = assistant.generate_response(prompt.get_final_prompt(user_input="hi"))
-    st.session_state.chat_history.append({"role": "assistant", "content": assistant_response})
+    st.session_state.chat_history.append({"username": st.session_state.username,"role": "assistant", "content": assistant_response})
     st.rerun()
 
 # Generate pages
@@ -47,12 +47,14 @@ def generate_chat_page():
     prompt = Prompt()
     generate_chat_history_view(prompt)
 
-    if not st.session_state.end_chat:
+    count = 0
+    if not st.session_state.end_chat and count < 4:
+        count += 1
         user_input = st.chat_input()
         if user_input:
             with st.chat_message("user"):
                 st.write(user_input)
-            st.session_state.chat_history.append({"role": "user", "content": user_input})
+            st.session_state.chat_history.append({"username": st.session_state.username, "role": "user", "content": user_input})
             
             with st.chat_message("assistant"):
                 with st.spinner("Thinking..."):
@@ -62,9 +64,23 @@ def generate_chat_page():
                 if assistant_response != "":
                     st.write(assistant_response)
             if assistant_response != "":
-                st.session_state.chat_history.append({"role": "assistant", "content": assistant_response})
+                st.session_state.chat_history.append({"username": st.session_state.username, "role": "assistant", "content": assistant_response})
     else:
-        st.markdown("Chat ended.")
+        handle_chat_end()
+
+def handle_chat_end():
+    st.markdown("Chat ended.")
+    faiss_embedder = FaissEmbedder()
+    faiss_embedder.embed_chat_history(st.session_state.chat_history)
+
+    # Testing
+    user_input = st.chat_input()
+    if user_input:
+        with st.chat_message("user"):
+            st.write(user_input)
+        results = faiss_embedder.search(user_input)
+        print(results)
+    
 
 def generate_chat_history_view(prompt):
     for message in st.session_state.chat_history:
