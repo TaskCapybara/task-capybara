@@ -10,6 +10,9 @@ parameters = {
     "decoding_method": "greedy",
     "max_new_tokens": 900,
     "repetition_penalty": 1
+    "temperature": 0.2,
+    "top_k": 3,
+    "top_p": 1
 }
 assistant = AppModel(model_id, parameters)
 
