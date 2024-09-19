@@ -15,6 +15,7 @@ assistant = AppModel(model_id, parameters)
 
 # Streamlit UI
 st.title('TaskCapybara Chatbot')
+st.header('For team member')
 
 # Initialize session states
 if "is_logged_in" not in st.session_state:
