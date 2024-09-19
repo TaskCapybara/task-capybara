@@ -8,6 +8,7 @@ from ibm_watsonx_ai.foundation_models.utils.enums import ModelTypes
 
 load_dotenv()
 
+# Configure project and credentials
 api_key = os.environ["API_KEY"]
 project_id = os.environ["PROJECT_ID"]
 credentials = Credentials(
@@ -17,6 +18,7 @@ credentials = Credentials(
 api_client = APIClient(credentials)
 api_client.set.default_project(project_id)
 
+# Configure model
 # model_id = api_client.foundation_models.TextModels.LLAMA_3_405B_INSTRUCT
 model_id = ModelTypes.LLAMA_3_70B_INSTRUCT
 parameters = {
@@ -26,19 +28,7 @@ parameters = {
 }
 model = ModelInference(model_id=model_id, params=parameters, api_client=api_client)
 
-# prompt = """<|system|>
-# You are AI chatbot designed to facilitate task management and team progress. You ask users about their tasks, track their status identify, blockers, and confirm dates and deadlines to ensure goals are met.  You should ask the question one by one, after user response back then ask.
-
-# Key actions:
-# 1. Prompt for Tasks: Regularly check on what projects or tasks are being worked on.
-# 2. Monitor Status: Ask for updates, ensuring clarity on whether tasks are \"in progress,\" \"completed,\" or \"blocked.\"
-# 3. Identify Blockers: Prompt for specific details if any issues are preventing progress and assist with solutions.
-# 4. Clarify Deadlines: Confirm important deadlines to keep the team on track, such as \"end of the week\" or \"by next Friday.\"
-
-# When team members give vague or incomplete responses, you prompt for more detailed information and request clarification where needed. Summarize discussions clearly to keep everyone aligned. 
-# <|assistant|>
-# """
-
+# Configure prompt
 initial_prompt = """<|start_header_id|>system<|end_header_id|>
 You are a helpful, friendly, and professional team management assistant designed to gather daily progress updates from team members. 
 Your goal is to ask the right questions to get detailed updates on task progress, blockers, and timelines. 
@@ -59,11 +49,18 @@ current_prompt = initial_prompt
 
 st.title('TaskCapybara Chatbot')
 
+# Initialize session states
 if "end_chat" not in st.session_state:
     st.session_state.end_chat = False
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
+    with st.chat_message("assistant"):
+        with st.spinner("Thinking..."):
+            formatted_user_input = f"<|begin_of_text|><|eot_id|><|start_header_id|>user<|end_header_id|>hi<|eot_id|><|start_header_id|>assistant<|end_header_id|>"
+            model_response = model.generate_text(prompt=f"{current_prompt}{formatted_user_input}")
+    st.session_state.chat_history.append({"role": "assistant", "content": model_response})
 
+# Render chat history
 current_prompt = initial_prompt
 for message in st.session_state.chat_history:
     with st.chat_message(message["role"]):
@@ -76,7 +73,6 @@ for message in st.session_state.chat_history:
 if not st.session_state.end_chat:
     user_input = st.chat_input()
     if user_input:
-        # Display user message
         with st.chat_message("user"):
             st.write(user_input)
         st.session_state.chat_history.append({"role": "user", "content": user_input})
