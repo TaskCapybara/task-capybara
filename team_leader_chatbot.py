@@ -9,7 +9,7 @@ model_id = ModelTypes.GRANITE_13B_CHAT_V2
 parameters = {
     "decoding_method": "greedy",
     "max_new_tokens": 900,
-    "repetition_penalty": 1
+    "repetition_penalty": 1,
     "temperature": 0.2,
     "top_k": 3,
     "top_p": 1
