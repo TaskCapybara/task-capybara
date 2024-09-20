@@ -45,14 +45,17 @@ def generate_login_page():
         st.rerun()
 
 def generate_chat_page():
-    st.subheader(f"Welcome back {st.session_state.username}")
+    with st.popover(st.session_state.username):
+        if st.button("Logout"):
+            for key in st.session_state.keys():
+                del st.session_state[key]
+            st.rerun()
+
     # Render chat history
     prompt = Prompt()
     generate_chat_history_view(prompt)
 
-    count = 0
-    if not st.session_state.end_chat and count < 4:
-        count += 1
+    if not st.session_state.end_chat:
         user_input = st.chat_input()
         if user_input:
             with st.chat_message("user"):
@@ -75,24 +78,17 @@ def handle_chat_end():
     st.markdown("Chat ended.")
     faiss_embedder = FaissEmbedder()
     faiss_embedder.embed_chat_history(st.session_state.chat_history)
-
-    # Testing
-    user_input = st.chat_input()
-    if user_input:
-        with st.chat_message("user"):
-            st.write(user_input)
-        results = faiss_embedder.search(user_input)
-        print(results)
+    faiss_embedder.save()
     
 
 def generate_chat_history_view(prompt):
-    for message in st.session_state.chat_history:
-        with st.chat_message(message["role"]):
-            st.write(message["content"])
-            if message["role"] == "assistant":
-                prompt.add_assistant_response(message["content"])
+    for chat_message in st.session_state.chat_history:
+        with st.chat_message(chat_message["role"]):
+            st.write(chat_message["content"])
+            if chat_message["role"] == "assistant":
+                prompt.add_assistant_response(chat_message["content"])
             else:
-                prompt.add_user_input(message["content"])
+                prompt.add_user_input(chat_message["content"])
 
 if not st.session_state.is_logged_in:
     generate_login_page()

@@ -49,12 +49,9 @@ class FaissEmbedder:
         embeddings = self.embedder.encode(self.chat_history)
         embeddings = np.array(embeddings).astype(np.float32)
         self.index.add(embeddings)
-    
-    def search(self, query, k=3):
-        query_embedding = self.embedder.encode([query]).astype(np.float32)
-        distances, indices = self.index.search(query_embedding, k)
-        results = []
-        for idx in indices[0]:
-            if idx < len(self.chat_history):
-                results.append(self.chat_history[idx])
-        return results
+
+    def save(self):
+        faiss.write_index(self.index, 'faiss_index.index')
+        with open("team_members_chat_histories.txt", "a") as file:
+            for chat_message in self.chat_history:
+                file.write(f"username: {chat_message["username"]}, role: {chat_message["role"]}, content: {chat_message["content"].replace("\n", ";")}\n")
