@@ -1,4 +1,4 @@
-faiss-cpu==1.8.0.post
+faiss-cpu==1.8.0
 ibm_watsonx_ai==1.1.9
 numpy==1.26.4
 python-dotenv==1.0.1

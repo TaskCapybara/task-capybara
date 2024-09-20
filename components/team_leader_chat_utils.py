@@ -46,6 +46,6 @@ class FaissRetriever:
         results = []
         print(indices[0])
         for idx in indices[0]:
-            if idx < len(self.chat_history):
+            if idx >= 0 and idx < len(self.chat_history):
                 results.append(self.chat_history[idx])
         return results

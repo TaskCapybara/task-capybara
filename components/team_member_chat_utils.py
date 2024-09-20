@@ -42,16 +42,17 @@ class FaissEmbedder:
     def __init__(self) -> None:
         self.index = faiss.IndexFlatL2(FaissEmbedder.DIMENSION)
         self.embedder = SentenceTransformer('all-MiniLM-L6-v2')
-        self.chat_history = []
 
     def embed_chat_history(self, chat_history):
-        self.chat_history = chat_history
-        embeddings = self.embedder.encode(self.chat_history)
+        with open("team_members_chat_histories.txt", "a") as file:
+            for chat_message in chat_history:
+                file.write(f"username: {chat_message["username"]}, role: {chat_message["role"]}, content: {chat_message["content"].replace("\n", " ")}\n")
+        with open("team_members_chat_histories.txt", "r") as file:
+            all_chat_history = file.read().splitlines()
+        embeddings = self.embedder.encode(all_chat_history)
         embeddings = np.array(embeddings).astype(np.float32)
         self.index.add(embeddings)
 
     def save(self):
         faiss.write_index(self.index, 'faiss_index.index')
-        with open("team_members_chat_histories.txt", "a") as file:
-            for chat_message in self.chat_history:
-                file.write(f"username: {chat_message["username"]}, role: {chat_message["role"]}, content: {chat_message["content"].replace("\n", ";")}\n")
+        
