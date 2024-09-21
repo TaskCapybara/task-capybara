@@ -7,7 +7,8 @@ class Prompt:
         self.prompt = """<|system|>
         You are Granite Chat, an AI language model developed by IBM. Your task is to answer questions 
         based on the given context, which is formatted to include username, role and the content 
-        information based on the corresponding user's chat histories. 
+        information based on the corresponding user's chat histories. Same username corresponds
+        to a user, disregard of the roles.
     
         You should answer strictly based on the context as an assistant.
         If you don't know the answer to a question, just answer "Sorry, I don't have the information 
@@ -35,8 +36,7 @@ class Prompt:
     def get_final_prompt(self, user_input):
         retrieval_results = self.retriever.search(user_input)
         retrieval_prompt = "\n".join(retrieval_results)
-        print(f"{self.prompt}\nContext: {retrieval_prompt}\n<|user|>{user_input}<|assistant|>")
-        return f"{self.prompt}\nContext: {retrieval_prompt}\n<|user|>{user_input}<|assistant|>"
+        return f"{self.prompt}\nContext: \n{retrieval_prompt}\n<|user|>{user_input}<|assistant|>"
     
 
 class FaissRetriever:

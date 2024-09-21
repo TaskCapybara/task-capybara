@@ -32,7 +32,14 @@ if "chat_history" not in st.session_state:
         with st.spinner("Thinking..."):
             prompt = Prompt()
             prompt.with_retriever(retriever)
-            assistant_response = assistant.generate_response(prompt.get_final_prompt(user_input="Please summarize all users' task progress in bullet form"))
+            question = """Please summarize all team members' task progress in the following format:
+            Username:
+            1. Current Tasks:
+            2. Tasks statuses:
+            3. Blockers:
+            4. Deadlines:
+            """
+            assistant_response = assistant.generate_response(prompt.get_final_prompt(user_input=question))
     st.session_state.chat_history.append({"role": "assistant", "content": "Here is the update from the team members today: \n" + assistant_response})
     st.rerun()
 
