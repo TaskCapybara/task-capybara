@@ -50,7 +50,6 @@ class FaissRetriever:
         query_embedding = self.embedder.encode([query]).astype(np.float32)
         distances, indices = self.index.search(query_embedding, k)
         results = []
-        print(indices[0])
         for idx in indices[0]:
             if idx >= 0 and idx < len(self.chat_history):
                 results.append(self.chat_history[idx])
