@@ -18,13 +18,17 @@ assistant = AppModel(model_id, parameters)
 retriever = FaissRetriever()
 
 # Streamlit UI
-st.title('TaskCapybara Chatbot')
-st.header('For team leader')
+logo_url = "logo.png"
+st.set_page_config(page_title="TaskCapybara - Team Leader", page_icon=logo_url)
+st.title('TaskCapybara - Team Leader')
+
+def get_avatar(role):
+    return logo_url if role == "assistant" else "😺"
 
 # Initialize session states
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
-    with st.chat_message("assistant"):
+    with st.chat_message("assistant", avatar=get_avatar("assistant")):
         with st.spinner("Thinking..."):
             prompt = Prompt()
             prompt.with_retriever(retriever)
@@ -41,23 +45,20 @@ def generate_chat_page():
 
     user_input = st.chat_input()
     if user_input:
-        with st.chat_message("user"):
+        with st.chat_message("user", avatar=get_avatar("user")):
             st.write(user_input)
         st.session_state.chat_history.append({"role": "user", "content": user_input})
         
-        with st.chat_message("assistant"):
+        with st.chat_message("assistant", avatar=get_avatar("assistant")):
             with st.spinner("Thinking..."):
                 assistant_response = assistant.generate_response(prompt.get_final_prompt(user_input))
             st.write(assistant_response)
         st.session_state.chat_history.append({"role": "assistant", "content": assistant_response})
 
 def generate_chat_history_view(prompt):
-    for message in st.session_state.chat_history:
-        with st.chat_message(message["role"]):
-            st.write(message["content"])
-            if message["role"] == "assistant":
-                prompt.add_assistant_response(message["content"])
-            else:
-                prompt.add_user_input(message["content"])
+    for chat_message in st.session_state.chat_history:
+            with st.chat_message(chat_message["role"], avatar=get_avatar(chat_message["role"])):
+                st.write(chat_message["content"])
+                prompt.add_chat_message(chat_message["role"], chat_message["content"])
 
 generate_chat_page()

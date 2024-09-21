@@ -17,8 +17,12 @@ parameters = {
 assistant = AppModel(model_id, parameters)
 
 # Streamlit UI
-st.title('TaskCapybara Chatbot')
-st.header('For team member')
+logo_url = "logo.png"
+st.set_page_config(page_title="TaskCapybara - Team Member", page_icon=logo_url)
+st.title('TaskCapybara - Team Member')
+
+def get_avatar(role):
+    return logo_url if role == "assistant" else "😺"
 
 # Initialize session states
 if "is_logged_in" not in st.session_state:
@@ -28,7 +32,7 @@ if "end_chat" not in st.session_state:
     st.session_state.end_chat = False
 if st.session_state.is_logged_in and "chat_history" not in st.session_state:
     st.session_state.chat_history = []
-    with st.chat_message("assistant"):
+    with st.chat_message("assistant", avatar=get_avatar("assistant")):
         with st.spinner("Thinking..."):
             prompt = Prompt()
             assistant_response = assistant.generate_response(prompt.get_final_prompt(user_input="hi"))
@@ -58,11 +62,11 @@ def generate_chat_page():
     if not st.session_state.end_chat:
         user_input = st.chat_input()
         if user_input:
-            with st.chat_message("user"):
+            with st.chat_message("user", avatar=get_avatar("user")):
                 st.write(user_input)
             st.session_state.chat_history.append({"username": st.session_state.username, "role": "user", "content": user_input})
             
-            with st.chat_message("assistant"):
+            with st.chat_message("assistant", avatar=get_avatar("assistant")):
                 with st.spinner("Thinking..."):
                     assistant_response = assistant.generate_response(prompt.get_final_prompt(user_input))
                     has_end_chat_tag, assistant_response = prompt.is_end_chat(assistant_response)
@@ -80,15 +84,11 @@ def handle_chat_end():
     faiss_embedder.embed_chat_history(st.session_state.chat_history)
     faiss_embedder.save()
     
-
 def generate_chat_history_view(prompt):
     for chat_message in st.session_state.chat_history:
-        with st.chat_message(chat_message["role"]):
+        with st.chat_message(chat_message["role"], avatar=get_avatar(chat_message["role"])):
             st.write(chat_message["content"])
-            if chat_message["role"] == "assistant":
-                prompt.add_assistant_response(chat_message["content"])
-            else:
-                prompt.add_user_input(chat_message["content"])
+            prompt.add_chat_message(chat_message["role"], chat_message["content"])
 
 if not st.session_state.is_logged_in:
     generate_login_page()

@@ -20,6 +20,11 @@ class Prompt:
         You should only end the conversation with the tag <EndChat> after user agrees to end the conversation.
         The tag <EndChat> should be the suffix of your response, and no more text after that.
         """
+    def add_chat_message(self, role, content):
+        if role == "user":
+            self.add_user_input(content)
+        else:
+            self.add_assistant_response(content)
 
     def add_user_input(self, user_input):
         self.prompt += f"<|eot_id|><|start_header_id|>user<|end_header_id|>{user_input}<|eot_id|>"

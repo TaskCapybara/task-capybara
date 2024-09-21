@@ -20,6 +20,12 @@ class Prompt:
     def with_retriever(self, retriever):
         self.retriever = retriever
 
+    def add_chat_message(self, role, content):
+        if role == "user":
+            self.add_user_input(content)
+        else:
+            self.add_assistant_response(content)
+
     def add_user_input(self, user_input):
         self.prompt += f"<|user|>{user_input}"
 
